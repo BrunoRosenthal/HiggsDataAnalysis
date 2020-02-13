@@ -152,8 +152,6 @@ for line in open("outreach.csv"):
 print("\nnEvents=%i\n" % nEvents)
 
 for i in range(len(data)):
-    if data[i]['type'] != 'BTags':
-        continue
     d = [y for x, y in data[i].items() if x not in ['type', 'num_bins', 'custom_axis']]
     d = adjust(d)
     try:
