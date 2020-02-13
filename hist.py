@@ -160,7 +160,6 @@ for i in range(len(data)):
         cust = data[i]['custom_axis']
         plt.hist(d, bins=data[i]['num_bins'], stacked=True, color=['blue','orange','green','red'], label=["H \u2192 WW", "WW", "ttbar", "Z"], rwidth=0.7)
         plt.xticks([0.25, 0.75], cust)
-        print(cust)
     except:
         plt.hist(d, bins=data[i]['num_bins'], stacked=True, color=['blue','orange','green','red'], label=["H \u2192 WW", "WW", "ttbar", "Z"], rwidth=0.7)       
     
