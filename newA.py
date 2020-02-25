@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
-
+plt.rcParams.update({'font.size': 5})
 
 class Event:
     def storeVariables(self, args):
@@ -102,18 +102,52 @@ for line in open("outreach.csv"):
     line = [float(x) if int(float(x)) != float(x) else int(float(x)) for x in line.split(',')]
     data.append(line)
 
-data1 = cut(data, 3, 0, 60)
+#data1 = cut(data, 3, 0, 60)
 
 def graph(data):
-    for i, j in zip(types, range(1, 10)):
+    fig, axes = plt.subplots(nrows=3, ncols=3)
+    Daxes = axes.flatten()
+    colors = ['#2671ab', 'orange', '#4b9c35', '#d93333']
+    labels=["H \u2192 WW", "WW", "ttbar", "Z"]
+    bins = [3,
+            [0, 1, 2, 3, 4, 5, 6, 7],
+            [j for j in range(0,200,10)],
+            [j for j in range(0,200,10)],
+            [j for j in range(0,181,10)],
+            [j for j in range(0,181,10)],
+            [j for j in range(0,200,10)],
+            [0, 1],
+            4]
+    
+    titles = ['EE         MM         EM',
+              'Number of Jets',
+              'Missing Transverse Momentum',
+              'Reconstructed Dilepton Mass',
+              'Opening Angle Between Leptons',
+              'Opening Angle Between MET and Leptons',
+              'Total Lepton Transverse Momentum',
+              '(No)      B-Tag     (Yes)'
+              ]
+    rangeB = [
+        [0, 2],
+        [0, 7],
+        [0, 200],
+        [0, 200],
+        [0, 180],
+        [0, 180],
+        [0, 200],
+        [0, 1],
+        [0, 3]
+        ]
+    for i, j, ax, b, title, r in zip(types, range(1, 10), Daxes, bins, titles, rangeB):
         d = split_data(data, j)
         d = adjust(np.array(d))
-        if i == 2:
-            plt.bar(d)
-        else:
-            plt.hist(d, bins=20, stacked=True, color=['blue', 'orange', 'green', 'red'], label=["H \u2192 WW", "WW", "ttbar", "Z"], rwidth=0.7)
-        plt.xlabel(i)
-        plt.legend(loc='best')
-        plt.show()
+        ax.hist(d, bins=b, stacked=True, color=colors, label=labels, rwidth=0.8)
+        ax.set_title(title)
+        #ax.xlabel(i)
+        #ax.legend(loc='best')
+        #ax.show()
+    plt.subplots_adjust(hspace = 0.5, wspace=0.7)
+    plt.show()
 
-graph(data1)
+graph(data)
