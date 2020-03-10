@@ -91,3 +91,4 @@ class Gui(tk.Frame):
     def create_reset_button(self, data):
         self.reset_button = tk.Button(self.master, text='Reset Cuts', command=lambda: self.reset_cuts(data))
         self.reset_button.grid(row=2, column=3)
+
