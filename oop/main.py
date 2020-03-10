@@ -182,5 +182,3 @@ g.create_sliders(d.ranges)
 g.create_button(d)
 g.create_reset_button(d)
 root.mainloop()
-
-    
