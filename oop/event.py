@@ -39,7 +39,7 @@ class Event:
         return self.eventType == 0
 
     def isBackground(self):
-        return self.eventType >= 1 and self.eventType <= 3
+        return 1 <= self.eventType <= 3
 
     def isData(self):
         return self.eventType == 4
