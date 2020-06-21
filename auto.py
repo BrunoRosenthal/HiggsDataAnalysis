@@ -93,18 +93,18 @@ def random_points():
     return rands
 
 
-tries = 0
-
+num_starting_points = 10
 start = False
-while not start:
-    r = random_points()
-    new_data, sig = multiple_cuts(data, r)
-    tries += 1
-    if sig > 0.3 and sig != np.inf:
-        # print(sig)
-        start = True
-        # print(tries)
-        # print(r)
+starting_points = []
+for i in range(num_starting_points):
+    while not start:
+        r = random_points()
+        new_data, sig = multiple_cuts(data, r)
+
+        if sig > 0.3 and sig != np.inf:
+            start = True
+
+            starting_points.append((r, sig))
 
 
 def increment(r, n):
@@ -171,8 +171,18 @@ def denormalize(v, ranges):
     return v
 
 
-def rand():
-    return [random.choice([-1, 1]) * increments[i // 2] for i in range(2 * len(increments))]
+def rand(r, ranges):
+    v = []
+    for i in range(len(r)):
+        vi = random.choice([-1, 1]) * increments[i]
+        vj = random.choice([-1, 1]) * increments[i]
+        if r[i][0] == ranges[i][0]:
+            vi = random.choice([0, 1]) * increments[i]
+        if r[i][1] == ranges[i][1]:
+            vj = random.choice([-1, 0]) * increments[i]
+        v.append(vi)
+        v.append(vj)
+    return v
 
 
 def apply_vec(r, v):
@@ -197,9 +207,44 @@ def recrop_vec(r):
     return r
 
 
-v = rand()
-print(v)
-print(r)
-r = apply_vec(crop_vec(r), v)
-r = recrop_vec(r)
-print(r)
+def rand_one_change(r, ranges):
+    r = np.array(crop_vec(r)).flatten()
+    tmp_ranges = np.array(ranges).flatten()
+    pos = random.randint(0, len(r) - 1)
+    val = random.choice([-1, 1])
+    if r[pos] == tmp_ranges[pos]:
+        if pos % 2 == 1:
+            val = -1
+        else:
+            val = 1
+    val *= increments[pos // 2]
+    r[pos] += val
+    temp = []
+    for i in range(0, len(r), 2):
+        temp.append([r[i], r[i + 1]])
+    temp = recrop_vec(temp)
+    pos = (1 + (pos // 2), pos % 2)
+    reversal = (pos, -val)
+    return temp, reversal
+
+ending_points = []
+for r, s in starting_points:
+    c = 0
+    sig = multiple_cuts(data, r)[1]
+    sig_100 = 0
+    next_point = False
+    while not next_point:
+        c += 1
+        sig = multiple_cuts(data, r)[1]
+        r, reversal = rand_one_change(r, ranges)
+        nSig = multiple_cuts(data, r)[1]
+        if nSig < sig:
+            r[reversal[0][0]][reversal[0][1]] += reversal[1]
+        if c % 100 == 0:
+            if sig == sig_100:
+                ending_points.append((r, sig))
+                next_point = True
+            sig_100 = sig
+
+print(starting_points)
+print(ending_points)
