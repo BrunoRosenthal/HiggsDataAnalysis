@@ -1,11 +1,13 @@
 import numpy as np
-from scipy.optimize import minimize
 from event import Event
 import random
 import time
 
 
+# Importing needed modules
+
 def read_file(data):
+    # this function puts the data into a set of arrays
     with open('outreach.csv') as f:
         for line in f:
             try:
@@ -13,7 +15,6 @@ def read_file(data):
             except Exception:
                 continue
 
-            weight = current.weight
             line = [float(x) if float(x) != int(float(x)) else int(float(x)) for x in line.split(',')]
             data.append(line)
 
@@ -21,17 +22,19 @@ def read_file(data):
 
 
 def calc_sig(data):
-    tWeight = 0
-    tSignalWeight = 0
+    # this function calculates the significance
+    t_weight = 0
+    t_signal_weight = 0
     for line in data:
-        tWeight += line[-1]
+        t_weight += line[-1]
         if line[0] == 0:
-            tSignalWeight += line[-1]
-    sig = tSignalWeight / np.sqrt(tWeight - tSignalWeight)
+            t_signal_weight += line[-1]
+    sig = t_signal_weight / np.sqrt(t_weight - t_signal_weight)
     return sig
 
 
 def cut(data, var, start, stop):
+    # this function cuts the data for a single variable
     if start <= stop:
         data = [x for x in data if ((x[var] >= start) and (x[var] < stop))]
     else:
@@ -40,22 +43,18 @@ def cut(data, var, start, stop):
 
 
 def multiple_cuts(data, var):
+    # this function cuts the data for multiple variables
     for i in range(len(var)):
         data = cut(data, i + 1, var[i][0], var[i][1])
     sig = calc_sig(data)
     return data, sig
 
 
-def objective(x, data):
-    v = np.split(x, 8)
-    data, sig = multiple_cuts(data, v)
-    return -sig
-
-
 data = read_file([])
 
 
 def random_points():
+    # this function generates a random 12 dimensional coordinate
     ranges = [[0, 3],
               [0, 8],
               [0, 200],
@@ -72,7 +71,6 @@ def random_points():
             b = random.randint(a + 1, j)
             a = 0
             b = random.randint(1, j)
-
 
         else:
             a = random.random()
@@ -93,60 +91,29 @@ def random_points():
     return rands
 
 
-num_starting_points = 10
-start = False
-starting_points = []
+num_starting_points = 10  # I set the number of random points to use
+sig_threshold = 0.35 # I set the minimum significance that will be passed through
+starting_points = [] # I create an array to store the random points
 for i in range(num_starting_points):
+    start = False
     while not start:
         r = random_points()
         new_data, sig = multiple_cuts(data, r)
 
-        if sig > 0.3 and sig != np.inf:
+        if sig > sig_threshold and sig != np.inf:
             start = True
 
             starting_points.append((r, sig))
 
 
 def increment(r, n):
+    # this function increments a 12 dimensional point
     if n % 2 == 0:
         r[n // 2][0] += 1
     else:
         r[n // 2][1] -= 1
     return r
 
-
-# stop = False
-# turns = 0
-# while not stop:
-#     turns += 1
-#
-#     r = increment(r, 12)
-#     #print(r)
-#     new_data, new_sig = multiple_cuts(data, r)
-#     if new_sig < sig:
-#         stop = True
-#         print(sig)
-#         print(turns)
-#         print(r)
-#     else:
-#         sig = new_sig
-
-# for i in range(2, 14):
-#     stop = False
-#     turns = 0
-#     while not stop:
-#         turns += 1
-#
-#         r = increment(r, i)
-#         # print(r)
-#         new_data, new_sig = multiple_cuts(data, r)
-#         if new_sig < sig:
-#             stop = True
-#             print(sig)
-#             print(turns)
-#             print(r)
-#         else:
-#             sig = new_sig
 
 ranges = [[0, 8],
           [0, 200],
@@ -158,56 +125,22 @@ ranges = [[0, 8],
 increments = [1, 1, 1, 0.01, 0.01, 1]
 
 
-def make_rand_vector(dims, scale):
-    vec = [random.gauss(0, 1) for i in range(dims)]
-    mag = sum(x ** 2 for x in vec) ** 0.5
-    return [(x * scale) / mag for x in vec]
-
-
-def denormalize(v, ranges):
-    temp_ranges = [ranges[i // 2][1] for i in range(2 * len(ranges))]
-    for i in range(len(v)):
-        v[i] *= temp_ranges[i]
-    return v
-
-
-def rand(r, ranges):
-    v = []
-    for i in range(len(r)):
-        vi = random.choice([-1, 1]) * increments[i]
-        vj = random.choice([-1, 1]) * increments[i]
-        if r[i][0] == ranges[i][0]:
-            vi = random.choice([0, 1]) * increments[i]
-        if r[i][1] == ranges[i][1]:
-            vj = random.choice([-1, 0]) * increments[i]
-        v.append(vi)
-        v.append(vj)
-    return v
-
-
-def apply_vec(r, v):
-    r = np.array(r).flatten()
-    for i in range(len(v)):
-        r[i] += v[i]
-    temp = []
-    for i in range(0, len(r), 2):
-        temp.append([r[i], r[i + 1]])
-    return temp
-
-
 def crop_vec(r):
+    # this function removes the first and last element because those aren't supposed to be randomised
     r.pop(0)
     r.pop()
     return r
 
 
 def recrop_vec(r):
+    # this function reinserts the first and last element
     r.insert(0, [2, 3])
     r.insert(len(r), [0, 1])
     return r
 
 
 def rand_one_change(r, ranges):
+    # this function changes 1 coordinate randomly of a 12 dimensional point
     r = np.array(crop_vec(r)).flatten()
     tmp_ranges = np.array(ranges).flatten()
     pos = random.randint(0, len(r) - 1)
@@ -227,7 +160,8 @@ def rand_one_change(r, ranges):
     reversal = (pos, -val)
     return temp, reversal
 
-ending_points = []
+
+ending_points = [] # this is the array where the final points will be stored
 for r, s in starting_points:
     c = 0
     sig = multiple_cuts(data, r)[1]
