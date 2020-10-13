@@ -4,7 +4,6 @@ import tkinter as tk
 from event import Event
 from gui import Gui
 
-
 class Data:
 
     def __init__(self):
