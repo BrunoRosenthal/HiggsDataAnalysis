@@ -1,7 +1,6 @@
 import tkinter as tk
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 
-
 class Gui(tk.Frame):
     def __init__(self, master, fig, flattened_axes, **kw):
         super().__init__(master, **kw)
